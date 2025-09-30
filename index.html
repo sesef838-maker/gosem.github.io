@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOSEM - شبكة اجتماعية سريعة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --sky-blue: #87CEEB;
+            --light-blue: #B0E2FF;
+            --cloud-gray: #F5F5F5;
+            --dark-blue: #1E90FF;
+            --text-color: #333;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, var(--sky-blue), #E0F7FF);
+            color: var(--text-color);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: white;
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            color: var(--dark-blue);
+            font-size: 24px;
+        }
+
+        .logo i {
+            color: var(--dark-blue);
+            font-size: 28px;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-icons i {
+            font-size: 22px;
+            color: var(--dark-blue);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-icons i:hover {
+            transform: scale(1.1);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .chat-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background-color: var(--light-blue);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            color: var(--dark-blue);
+            font-size: 18px;
+        }
+
+        .chat-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-options i {
+            color: var(--dark-blue);
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: linear-gradient(to bottom, #E6F7FF, #F0FBFF);
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .received {
+            background-color: var(--light-blue);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .sent {
+            background-color: var(--cloud-gray);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            text-align: left;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: -25px;
+            background: white;
+            border-radius: 20px;
+            padding: 5px 10px;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .message:hover .message-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-actions i {
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--dark-blue);
+        }
+
+        .input-container {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            resize: none;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .send-btn {
+            background-color: var(--dark-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover {
+            background-color: #1C86EE;
+            transform: scale(1.05);
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 70px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 10px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 5px;
+            width: 250px;
+            z-index: 100;
+        }
+
+        .emoji {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .emoji:hover {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .posts-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .post {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--dark-blue);
+            font-weight: bold;
+        }
+
+        .post-content {
+            margin: 10px 0;
+        }
+
+        .post-image {
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .post-video {
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .post-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .post-action:hover {
+            color: var(--dark-blue);
+        }
+
+        .login-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            max-width: 400px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            color: var(--dark-blue);
+            margin-bottom: 20px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--dark-blue);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            background-color: #1C86EE;
+        }
+
+        .developer-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .developer-content {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+
+        .developer-content h2 {
+            color: var(--dark-blue);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .developer-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .developer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .developer-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .primary-btn {
+            background-color: var(--dark-blue);
+            color: white;
+        }
+
+        .secondary-btn {
+            background-color: #eee;
+            color: #333;
+        }
+
+        .developer-btn:hover {
+            opacity: 0.9;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 10px 0;
+            min-width: 200px;
+            z-index: 100;
+            display: none;
+        }
+
+        .dropdown-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .group-list {
+            margin-top: 20px;
+        }
+
+        .group-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .group-item:hover {
+            background-color: #f0f8ff;
+        }
+
+        .group-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--dark-blue);
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .firebase-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status-connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .status-disconnected {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- تسجيل الدخول -->
+    <div id="loginPage" class="login-container">
+        <div class="logo">
+            <i class="fas fa-comments"></i>
+            <h1>GOSEM</h1>
+        </div>
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="usernameInput" class="login-input" placeholder="اسم المستخدم">
+        <button id="loginBtn" class="login-btn">الدخول إلى GOSEM</button>
+        <p style="margin-top: 15px; color: #666; font-size: 14px;">اختر اسمًا وسيتم حفظ معلوماتك تلقائيًا</p>
+        <div id="firebaseStatus" class="firebase-status status-connected">Firebase: متصل</div>
+    </div>
+
+    <!-- الواجهة الرئيسية -->
+    <div id="mainPage" class="container" style="display: none;">
+        <header>
+            <div class="logo">
+                <i class="fas fa-comments"></i>
+                <h1>GOSEM <span id="headerFirebaseStatus" class="firebase-status status-connected">متصل</span></h1>
+            </div>
+            <div class="nav-icons">
+                <i class="fas fa-home" title="الرئيسية"></i>
+                <i class="fas fa-users" title="المجموعات"></i>
+                <i class="fas fa-bell" title="الإشعارات"></i>
+                <i class="fas fa-cog" id="settingsBtn" title="الإعدادات"></i>
+                <i class="fas fa-comment-medical" id="contactPageBtn" title="تواصل مع الصفحة"></i>
+                <div class="user-profile">
+                    <div class="avatar" id="userAvatar">م</div>
+                    <span id="usernameDisplay">مستخدم</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- الشريط الجانبي الأيسر -->
+            <div class="sidebar">
+                <h3>المجموعات</h3>
+                <input type="text" class="search-bar" placeholder="ابحث في المجموعات...">
+                <div class="group-list">
+                    <div class="group-item" data-group="main">
+                        <div class="group-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <h4>المجموعة الرئيسية</h4>
+                            <p>مجموعة موحدة لجميع الأعضاء</p>
+                        </div>
+                    </div>
+                    <div class="group-item" data-group="tech">
+                        <div class="group-icon">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <div>
+                            <h4>التكنولوجيا</h4>
+                            <p>مناقشات حول التكنولوجيا</p>
+                        </div>
+                    </div>
+                    <div class="group-item" data-group="sports">
+                        <div class="group-icon">
+                            <i class="fas fa-futbol"></i>
+                        </div>
+                        <div>
+                            <h4>الرياضة</h4>
+                            <p>أخبار ونقاشات رياضية</p>
+                        </div>
+                    </div>
+                    <div class="group-item" id="createGroupBtn">
+                        <div class="group-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div>
+                            <h4>إنشاء مجموعة جديدة</h4>
+                            <p>انشئ مجموعة جديدة للتواصل</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">الأصدقاء النشطون</h3>
+                <input type="text" class="search-bar" placeholder="ابحث في الأصدقاء...">
+                <div id="onlineUsers" class="group-list">
+                    <!-- سيتم ملء المستخدمين المتصلين هنا -->
+                </div>
+            </div>
+
+            <!-- المحادثة الرئيسية -->
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2 id="currentGroup">المجموعة الرئيسية</h2>
+                    <div class="chat-options">
+                        <i class="fas fa-search" id="searchMessagesBtn" title="بحث في المحادثة"></i>
+                        <i class="fas fa-user-plus" id="addMemberBtn" title="إضافة عضو"></i>
+                        <i class="fas fa-ellipsis-v" id="chatMenuBtn" title="المزيد"></i>
+                    </div>
+                </div>
+                
+                <div class="messages-container" id="messagesContainer">
+                    <!-- سيتم إضافة الرسائل هنا ديناميكيًا -->
+                </div>
+                
+                <div class="input-container">
+                    <div style="position: relative;">
+                        <textarea class="message-input" id="messageInput" placeholder="اكتب رسالة..." rows="1"></textarea>
+                        <div class="emoji-picker" id="emojiPicker">
+                            <span class="emoji">😀</span>
+                            <span class="emoji">😂</span>
+                            <span class="emoji">😍</span>
+                            <span class="emoji">😎</span>
+                            <span class="emoji">👍</span>
+                            <span class="emoji">❤️</span>
+                            <span class="emoji">🔥</span>
+                            <span class="emoji">🎉</span>
+                        </div>
+                    </div>
+                    <button class="send-btn" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- المنشورات -->
+            <div class="sidebar">
+                <h3>أحدث المنشورات</h3>
+                <div class="posts-container" id="postsContainer">
+                    <!-- سيتم ملء المنشورات من Firebase -->
+                </div>
+                <button id="createPostBtn" style="width: 100%; padding: 12px; background: var(--dark-blue); color: white; border: none; border-radius: 10px; margin-top: 15px; cursor: pointer;">
+                    <i class="fas fa-plus"></i> إنشاء منشور جديد
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- لوحة المطور -->
+    <div class="developer-panel" id="developerPanel">
+        <div class="developer-content">
+            <h2>لوحة المطور</h2>
+            <input type="password" id="devPassword" class="developer-input" placeholder="كلمة السر للمطور">
+            <div id="devOptions" style="display: none;">
+                <h3>إعدادات Firebase</h3>
+                <textarea id="firebaseConfig" class="developer-input" placeholder="أدخل تكوين Firebase هنا" rows="6">{
+  "apiKey": "AIzaSyDD4E-A42-_5PeR48u4ffIk-6PaXW4IMWo",
+  "authDomain": "gosem-e2084.firebaseapp.com",
+  "projectId": "gosem-e2084",
+  "storageBucket": "gosem-e2084.firebasestorage.app",
+  "messagingSenderId": "143848445329",
+  "appId": "1:143848445329:web:b6ee59ab0b8afe17c63630",
+  "databaseURL": "https://gosem-e2084-default-rtdb.firebaseio.com"
+}</textarea>
+                <div class="developer-actions">
+                    <button class="developer-btn primary-btn" id="saveConfigBtn">حفظ التكوين</button>
+                    <button class="developer-btn secondary-btn" id="downloadConfigBtn">تنزيل التكوينات السابقة</button>
+                    <button class="developer-btn secondary-btn" id="resetConfigBtn">إعادة تعيين الكل</button>
+                </div>
+                <div id="firebaseInfo" style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
+                    <h4>حالة Firebase:</h4>
+                    <p id="firebaseConnectionStatus">متصل بنجاح بمشروع GOSEM</p>
+                </div>
+            </div>
+            <div class="developer-actions">
+                <button class="developer-btn primary-btn" id="devSubmitBtn">تأكيد</button>
+                <button class="developer-btn secondary-btn" id="devCloseBtn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- القوائم المنسدلة -->
+    <div class="dropdown-menu" id="settingsMenu">
+        <div class="dropdown-item">
+            <i class="fas fa-user-cog"></i>
+            <span>إعدادات الحساب</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-moon"></i>
+            <span>الوضع الليلي</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-bell-slash"></i>
+            <span>كتم الإشعارات</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-shield-alt"></i>
+            <span>الخصوصية</span>
+        </div>
+        <div class="dropdown-item" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>تسجيل الخروج</span>
+        </div>
+    </div>
+
+    <div class="dropdown-menu" id="chatMenu">
+        <div class="dropdown-item">
+            <i class="fas fa-info-circle"></i>
+            <span>معلومات المجموعة</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-edit"></i>
+            <span>تغيير اسم المجموعة</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-user-friends"></i>
+            <span>إدارة الأعضاء</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-search"></i>
+            <span>بحث في المحادثة</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-bell-slash"></i>
+            <span>كتم المجموعة</span>
+        </div>
+    </div>
+
+    <!-- نموذج إنشاء مجموعة -->
+    <div class="developer-panel" id="createGroupPanel">
+        <div class="developer-content">
+            <h2>إنشاء مجموعة جديدة</h2>
+            <input type="text" id="groupNameInput" class="developer-input" placeholder="اسم المجموعة">
+            <textarea id="groupDescriptionInput" class="developer-input" placeholder="وصف المجموعة" rows="3"></textarea>
+            <div class="developer-actions">
+                <button class="developer-btn primary-btn" id="createGroupConfirmBtn">إنشاء</button>
+                <button class="developer-btn secondary-btn" id="createGroupCancelBtn">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج إنشاء منشور -->
+    <div class="developer-panel" id="createPostPanel">
+        <div class="developer-content">
+            <h2>إنشاء منشور جديد</h2>
+            <textarea id="postContentInput" class="developer-input" placeholder="محتوى المنشور" rows="4"></textarea>
+            <input type="text" id="postMediaUrlInput" class="developer-input" placeholder="رابط الصورة أو الفيديو (اختياري)">
+            <select id="postMediaTypeInput" class="developer-input">
+                <option value="none">بدون وسائط</option>
+                <option value="image">صورة</option>
+                <option value="video">فيديو</option>
+            </select>
+            <div class="developer-actions">
+                <button class="developer-btn primary-btn" id="createPostConfirmBtn">نشر</button>
+                <button class="developer-btn secondary-btn" id="createPostCancelBtn">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تكوين Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDD4E-A42-_5PeR48u4ffIk-6PaXW4IMWo",
+            authDomain: "gosem-e2084.firebaseapp.com",
+            projectId: "gosem-e2084",
+            storageBucket: "gosem-e2084.firebasestorage.app",
+            messagingSenderId: "143848445329",
+            appId: "1:143848445329:web:b6ee59ab0b8afe17c63630",
+            databaseURL: "https://gosem-e2084-default-rtdb.firebaseio.com"
+        };
+
+        // تهيئة Firebase
+        let firebaseApp = null;
+        let database = null;
+        let auth = null;
+        let currentUser = null;
+        let messages = [];
+        let currentGroupId = 'main';
+        let isFirebaseInitialized = false;
+
+        // عناصر DOM
+        const loginPage = document.getElementById('loginPage');
+        const mainPage = document.getElementById('mainPage');
+        const usernameInput = document.getElementById('usernameInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const developerPanel = document.getElementById('developerPanel');
+        const contactPageBtn = document.getElementById('contactPageBtn');
+        const devPassword = document.getElementById('devPassword');
+        const devOptions = document.getElementById('devOptions');
+        const devSubmitBtn = document.getElementById('devSubmitBtn');
+        const devCloseBtn = document.getElementById('devCloseBtn');
+        const saveConfigBtn = document.getElementById('saveConfigBtn');
+        const downloadConfigBtn = document.getElementById('downloadConfigBtn');
+        const resetConfigBtn = document.getElementById('resetConfigBtn');
+        const firebaseConfigTextarea = document.getElementById('firebaseConfig');
+        const firebaseInfo = document.getElementById('firebaseInfo');
+        const firebaseConnectionStatus = document.getElementById('firebaseConnectionStatus');
+        const firebaseStatus = document.getElementById('firebaseStatus');
+        const headerFirebaseStatus = document.getElementById('headerFirebaseStatus');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const chatMenuBtn = document.getElementById('chatMenuBtn');
+        const chatMenu = document.getElementById('chatMenu');
+        const currentGroup = document.getElementById('currentGroup');
+        const groupItems = document.querySelectorAll('.group-item');
+        const onlineUsers = document.getElementById('onlineUsers');
+        const postsContainer = document.getElementById('postsContainer');
+        const userAvatar = document.getElementById('userAvatar');
+        const usernameDisplay = document.getElementById('usernameDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        const createGroupPanel = document.getElementById('createGroupPanel');
+        const createGroupConfirmBtn = document.getElementById('createGroupConfirmBtn');
+        const createGroupCancelBtn = document.getElementById('createGroupCancelBtn');
+        const groupNameInput = document.getElementById('groupNameInput');
+        const groupDescriptionInput = document.getElementById('groupDescriptionInput');
+        const createPostBtn = document.getElementById('createPostBtn');
+        const createPostPanel = document.getElementById('createPostPanel');
+        const createPostConfirmBtn = document.getElementById('createPostConfirmBtn');
+        const createPostCancelBtn = document.getElementById('createPostCancelBtn');
+        const postContentInput = document.getElementById('postContentInput');
+        const postMediaUrlInput = document.getElementById('postMediaUrlInput');
+        const postMediaTypeInput = document.getElementById('postMediaTypeInput');
+        const searchMessagesBtn = document.getElementById('searchMessagesBtn');
+        const addMemberBtn = document.getElementById('addMemberBtn');
+
+        // تهيئة التطبيق
+        function initApp() {
+            // تهيئة Firebase
+            initializeFirebase(firebaseConfig);
+
+            // التحقق من وجود مستخدم مسجل
+            const savedUser = localStorage.getItem('gosem_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainPage();
+            } else {
+                showLoginPage();
+            }
+
+            // تحميل الرسائل من التخزين المحلي (النسخة الاحتياطية)
+            loadMessagesFromLocalStorage();
+        }
+
+        // تهيئة Firebase
+        function initializeFirebase(config) {
+            try {
+                firebaseApp = firebase.initializeApp(config);
+                database = firebase.database();
+                auth = firebase.auth();
+                
+                isFirebaseInitialized = true;
+                updateFirebaseStatus(true);
+                
+                // إعداد مستمعين لـ Firebase
+                setupFirebaseListeners();
+                
+                return true;
+            } catch (error) {
+                console.error('خطأ في تهيئة Firebase:', error);
+                updateFirebaseStatus(false);
+                return false;
+            }
+        }
+
+        // إعداد مستمعين لـ Firebase
+        function setupFirebaseListeners() {
+            if (!isFirebaseInitialized) return;
+
+            // الاستماع للتغيرات في قاعدة البيانات للمجموعة الحالية
+            database.ref('messages/' + currentGroupId).on('value', (snapshot) => {
+                const messagesData = snapshot.val();
+                if (messagesData) {
+                    messages = Object.values(messagesData);
+                    renderMessages();
+                }
+            });
+
+            // الاستماع للتغيرات في المنشورات
+            database.ref('posts').on('value', (snapshot) => {
+                const postsData = snapshot.val();
+                if (postsData) {
+                    renderPosts(Object.values(postsData));
+                }
+            });
+
+            // الاستماع للتغيرات في المستخدمين المتصلين
+            database.ref('onlineUsers').on('value', (snapshot) => {
+                const usersData = snapshot.val();
+                if (usersData) {
+                    renderOnlineUsers(Object.values(usersData));
+                }
+            });
+
+            // الاستماع للتغيرات في المجموعات
+            database.ref('groups').on('value', (snapshot) => {
+                const groupsData = snapshot.val();
+                if (groupsData) {
+                    renderGroups(Object.values(groupsData));
+                }
+            });
+
+            // تحديث حالة الاتصال
+            database.ref('.info/connected').on('value', (snapshot) => {
+                const isConnected = snapshot.val();
+                updateFirebaseStatus(isConnected);
+            });
+        }
+
+        // تحديث حالة اتصال Firebase
+        function updateFirebaseStatus(connected) {
+            if (connected) {
+                firebaseStatus.textContent = 'Firebase: متصل';
+                firebaseStatus.className = 'firebase-status status-connected';
+                headerFirebaseStatus.textContent = 'متصل';
+                headerFirebaseStatus.className = 'firebase-status status-connected';
+            } else {
+                firebaseStatus.textContent = 'Firebase: غير متصل';
+                firebaseStatus.className = 'firebase-status status-disconnected';
+                headerFirebaseStatus.textContent = 'غير متصل';
+                headerFirebaseStatus.className = 'firebase-status status-disconnected';
+            }
+        }
+
+        // عرض صفحة تسجيل الدخول
+        function showLoginPage() {
+            loginPage.style.display = 'block';
+            mainPage.style.display = 'none';
+        }
+
+        // عرض الصفحة الرئيسية
+        function showMainPage() {
+            loginPage.style.display = 'none';
+            mainPage.style.display = 'block';
+            
+            // تحديث معلومات المستخدم
+            if (currentUser) {
+                userAvatar.textContent = currentUser.name.charAt(0);
+                usernameDisplay.textContent = currentUser.name;
+            }
+            
+            // إذا كان Firebase نشطًا، قم بتحميل البيانات
+            if (isFirebaseInitialized) {
+                loadInitialData();
+            }
+        }
+
+        // تحميل البيانات الأولية من Firebase
+        function loadInitialData() {
+            // تحديث حالة المستخدم في Firebase
+            if (currentUser && isFirebaseInitialized) {
+                database.ref('onlineUsers/' + currentUser.name).set({
+                    name: currentUser.name,
+                    lastActive: firebase.database.ServerValue.TIME_STAMP
+                });
+            }
+        }
+
+        // تحميل الرسائل من التخزين المحلي (نسخة احتياطية)
+        function loadMessagesFromLocalStorage() {
+            const savedMessages = localStorage.getItem('gosem_messages');
+            if (savedMessages) {
+                messages = JSON.parse(savedMessages);
+            } else {
+                messages = [];
+                addDefaultMessages();
+            }
+            renderMessages();
+        }
+
+        // إضافة رسائل افتراضية
+        function addDefaultMessages() {
+            messages = [
+                {
+                    id: 1,
+                    text: 'مرحباً بكم في GOSEM!',
+                    sender: 'نظام',
+                    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                    isSent: false,
+                    group: 'main',
+                    timestamp: Date.now()
+                },
+                {
+                    id: 2,
+                    text: 'هذه منصة تواصل اجتماعي سريعة وسهلة الاستخدام',
+                    sender: 'نظام',
+                    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                    isSent: false,
+                    group: 'main',
+                    timestamp: Date.now()
+                }
+            ];
+            saveMessagesToLocalStorage();
+        }
+
+        // حفظ الرسائل في التخزين المحلي (نسخة احتياطية)
+        function saveMessagesToLocalStorage() {
+            localStorage.setItem('gosem_messages', JSON.stringify(messages));
+        }
+
+        // عرض الرسائل
+        function renderMessages() {
+            messagesContainer.innerHTML = '';
+            
+            const groupMessages = messages
+                .filter(msg => msg.group === currentGroupId)
+                .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            
+            groupMessages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${message.isSent ? 'sent' : 'received'}`;
+                messageElement.dataset.id = message.id;
+                
+                let senderHtml = '';
+                if (!message.isSent) {
+                    senderHtml = `<div class="message-sender">${message.sender}</div>`;
+                }
+                
+                messageElement.innerHTML = `
+                    ${senderHtml}
+                    <div class="message-text">${message.text}</div>
+                    <div class="message-time">${message.time}</div>
+                    <div class="message-actions">
+                        <i class="fas fa-reply" title="رد"></i>
+                        ${message.isSent || currentUser.name === 'مطور' ? 
+                          `<i class="fas fa-edit" title="تعديل" onclick="editMessage('${message.id}')"></i>
+                           <i class="fas fa-trash" title="حذف" onclick="deleteMessage('${message.id}')"></i>` : ''}
+                        <i class="far fa-smile" title="إضافة إيموجي" onclick="toggleEmojiPicker('${message.id}')"></i>
+                    </div>
+                `;
+                
+                // إضافة خاصية الضغط المطول لعرض الإيموجي
+                messageElement.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    toggleEmojiPicker(message.id);
+                });
+                
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // التمرير إلى الأسفل
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // عرض المنشورات
+        function renderPosts(posts) {
+            postsContainer.innerHTML = '';
+            
+            // ترتيب المنشورات من الأحدث إلى الأقدم
+            posts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                
+                let mediaHtml = '';
+                if (post.mediaUrl && post.mediaType === 'image') {
+                    mediaHtml = `<img src="${post.mediaUrl}" class="post-image" alt="صورة المنشور">`;
+                } else if (post.mediaUrl && post.mediaType === 'video') {
+                    // تحويل رابط يوتيوب إلى رابط تضمين
+                    let embedUrl = post.mediaUrl;
+                    if (post.mediaUrl.includes('youtube.com') || post.mediaUrl.includes('youtu.be')) {
+                        const videoId = post.mediaUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                        if (videoId) {
+                            embedUrl = `https://www.youtube.com/embed/${videoId[1]}`;
+                        }
+                    }
+                    mediaHtml = `
+                        <div class="post-video">
+                            <iframe width="100%" height="200" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    `;
+                }
+                
+                postElement.innerHTML = `
+                    <div class="post-header">
+                        <div class="avatar">${post.author.charAt(0)}</div>
+                        <div>
+                            <h4>${post.author}</h4>
+                            <p>${post.time}</p>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <p>${post.content}</p>
+                        ${mediaHtml}
+                    </div>
+                    <div class="post-actions">
+                        <div class="post-action">
+                            <i class="far fa-thumbs-up"></i>
+                            <span>${post.likes || 0}</span>
+                        </div>
+                        <div class="post-action">
+                            <i class="far fa-comment"></i>
+                            <span>${post.comments || 0}</span>
+                        </div>
+                        <div class="post-action">
+                            <i class="far fa-share-square"></i>
+                            <span>مشاركة</span>
+                        </div>
+                    </div>
+                `;
+                
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        // عرض المستخدمين المتصلين
+        function renderOnlineUsers(users) {
+            onlineUsers.innerHTML = '';
+            
+            // عرض فقط المستخدمين النشطين في آخر 5 دقائق
+            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+            const activeUsers = users.filter(user => user.lastActive > fiveMinutesAgo);
+            
+            activeUsers.forEach(user => {
+                // عدم عرض المستخدم الحالي
+                if (user.name === currentUser.name) return;
+                
+                const userElement = document.createElement('div');
+                userElement.className = 'group-item';
+                userElement.innerHTML = `
+                    <div class="avatar">${user.name.charAt(0)}</div>
+                    <div>
+                        <h4>${user.name}</h4>
+                        <p>نشط الآن</p>
+                    </div>
+                `;
+                
+                onlineUsers.appendChild(userElement);
+            });
+        }
+
+        // عرض المجموعات
+        function renderGroups(groups) {
+            const groupList = document.querySelector('.group-list');
+            // الحفاظ على العناصر الثابتة (المجموعة الرئيسية وإنشاء مجموعة)
+            const staticItems = groupList.querySelectorAll('.group-item[data-group="main"], #createGroupBtn');
+            groupList.innerHTML = '';
+            
+            // إضافة العناصر الثابتة أولاً
+            staticItems.forEach(item => {
+                groupList.appendChild(item);
+            });
+            
+            // إضافة المجموعات الديناميكية
+            groups.forEach(group => {
+                const groupElement = document.createElement('div');
+                groupElement.className = 'group-item';
+                groupElement.dataset.group = group.id;
+                groupElement.innerHTML = `
+                    <div class="group-icon">
+                        <i class="fas ${group.icon || 'fa-users'}"></i>
+                    </div>
+                    <div>
+                        <h4>${group.name}</h4>
+                        <p>${group.description}</p>
+                    </div>
+                `;
+                
+                groupElement.addEventListener('click', () => {
+                    switchGroup(group.id, group.name);
+                });
+                
+                groupList.insertBefore(groupElement, createGroupBtn);
+            });
+        }
+
+        // إرسال رسالة
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text === '') return;
+            
+            const newMessage = {
+                id: generateId(),
+                text: text,
+                sender: currentUser.name,
+                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                isSent: true,
+                group: currentGroupId,
+                timestamp: Date.now()
+            };
+            
+            // إرسال إلى Firebase إذا كان متصلاً
+            if (isFirebaseInitialized) {
+                database.ref('messages/' + currentGroupId + '/' + newMessage.id).set(newMessage)
+                    .then(() => {
+                        console.log('تم إرسال الرسالة إلى Firebase');
+                    })
+                    .catch((error) => {
+                        console.error('خطأ في إرسال الرسالة إلى Firebase:', error);
+                        // حفظ محليًا كنسخة احتياطية
+                        messages.push(newMessage);
+                        saveMessagesToLocalStorage();
+                    });
+            } else {
+                // حفظ محليًا فقط
+                messages.push(newMessage);
+                saveMessagesToLocalStorage();
+                renderMessages();
+            }
+            
+            // مسح حقل الإدخال
+            messageInput.value = '';
+            adjustTextareaHeight();
+        }
+
+        // توليد معرف فريد
+        function generateId() {
+            return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // تعديل رسالة
+        function editMessage(messageId) {
+            const message = messages.find(msg => msg.id === messageId);
+            if (!message) return;
+            
+            const newText = prompt('عدل رسالتك:', message.text);
+            if (newText !== null && newText.trim() !== '') {
+                message.text = newText.trim();
+                
+                // تحديث في Firebase إذا كان متصلاً
+                if (isFirebaseInitialized) {
+                    database.ref('messages/' + currentGroupId + '/' + messageId).update({
+                        text: newText.trim()
+                    }).catch(error => {
+                        console.error('خطأ في تحديث الرسالة في Firebase:', error);
+                        saveMessagesToLocalStorage();
+                    });
+                } else {
+                    saveMessagesToLocalStorage();
+                }
+                
+                renderMessages();
+            }
+        }
+
+        // حذف رسالة
+        function deleteMessage(messageId) {
+            if (confirm('هل تريد حذف هذه الرسالة؟')) {
+                // إذا كان المستخدم هو المطور، يمكنه حذف أي رسالة
+                if (currentUser && currentUser.name === 'مطور') {
+                    messages = messages.filter(msg => msg.id !== messageId);
+                } else {
+                    // المستخدم العادي يمكنه حذف رسائله فقط
+                    messages = messages.filter(msg => !(msg.id === messageId && msg.isSent));
+                }
+                
+                // تحديث في Firebase إذا كان متصلاً
+                if (isFirebaseInitialized) {
+                    database.ref('messages/' + currentGroupId + '/' + messageId).remove()
+                        .catch(error => {
+                            console.error('خطأ في حذف الرسالة من Firebase:', error);
+                            saveMessagesToLocalStorage();
+                        });
+                } else {
+                    saveMessagesToLocalStorage();
+                }
+                
+                renderMessages();
+            }
+        }
+
+        // تبديل عرض منتقي الإيموجي
+        function toggleEmojiPicker(messageId) {
+            const messageElement = document.querySelector(`.message[data-id="${messageId}"]`);
+            if (!messageElement) return;
+            
+            const existingPicker = document.querySelector('.emoji-picker.show');
+            if (existingPicker) {
+                existingPicker.classList.remove('show');
+            }
+            
+            emojiPicker.classList.add('show');
+            emojiPicker.style.left = '10px';
+            emojiPicker.style.bottom = '60px';
+            
+            // إضافة الإيموجي للرسالة عند النقر
+            const emojis = emojiPicker.querySelectorAll('.emoji');
+            emojis.forEach(emoji => {
+                emoji.onclick = function() {
+                    const message = messages.find(msg => msg.id === messageId);
+                    if (message) {
+                        message.text += emoji.textContent;
+                        
+                        // تحديث في Firebase إذا كان متصلاً
+                        if (isFirebaseInitialized) {
+                            database.ref('messages/' + currentGroupId + '/' + messageId).update({
+                                text: message.text
+                            }).catch(error => {
+                                console.error('خطأ في تحديث الرسالة في Firebase:', error);
+                                saveMessagesToLocalStorage();
+                            });
+                        } else {
+                            saveMessagesToLocalStorage();
+                        }
+                        
+                        renderMessages();
+                    }
+                    emojiPicker.classList.remove('show');
+                };
+            });
+            
+            // إغلاق منتقي الإيموجي عند النقر خارجها
+            document.addEventListener('click', function closePicker(e) {
+                if (!emojiPicker.contains(e.target)) {
+                    emojiPicker.classList.remove('show');
+                    document.removeEventListener('click', closePicker);
+                }
+            });
+        }
+
+        // ضبط ارتفاع منطقة النص تلقائياً
+        function adjustTextareaHeight() {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+        }
+
+        // عرض لوحة المطور
+        function showDeveloperPanel() {
+            developerPanel.style.display = 'flex';
+        }
+
+        // إغلاق لوحة المطور
+        function closeDeveloperPanel() {
+            developerPanel.style.display = 'none';
+            devPassword.value = '';
+            devOptions.style.display = 'none';
+        }
+
+        // تبديل المجموعة
+        function switchGroup(groupId, groupName) {
+            currentGroupId = groupId;
+            currentGroup.textContent = groupName;
+            
+            // إيقاف الاستماع للمجموعة السابقة
+            if (isFirebaseInitialized) {
+                database.ref('messages/' + currentGroupId).off();
+            }
+            
+            // تحميل رسائل المجموعة من Firebase
+            if (isFirebaseInitialized) {
+                database.ref('messages/' + currentGroupId).on('value', (snapshot) => {
+                    const messagesData = snapshot.val();
+                    if (messagesData) {
+                        messages = Object.values(messagesData);
+                        renderMessages();
+                    } else {
+                        messages = [];
+                        renderMessages();
+                    }
+                });
+            } else {
+                // استخدام الرسائل المحلية
+                const groupMessages = messages.filter(msg => msg.group === currentGroupId);
+                if (groupMessages.length === 0 && groupId !== 'main') {
+                    // إضافة رسالة ترحيبية للمجموعة الجديدة
+                    const welcomeMessage = {
+                        id: generateId(),
+                        text: `مرحباً بك في مجموعة ${groupName}!`,
+                        sender: 'نظام',
+                        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                        isSent: false,
+                        group: groupId,
+                        timestamp: Date.now()
+                    };
+                    messages.push(welcomeMessage);
+                    saveMessagesToLocalStorage();
+                }
+                renderMessages();
+            }
+        }
+
+        // إنشاء مجموعة جديدة
+        function createNewGroup() {
+            const name = groupNameInput.value.trim();
+            const description = groupDescriptionInput.value.trim();
+            
+            if (name === '') {
+                alert('الرجاء إدخال اسم المجموعة');
+                return;
+            }
+            
+            const newGroup = {
+                id: 'group_' + Date.now(),
+                name: name,
+                description: description,
+                creator: currentUser.name,
+                timestamp: Date.now()
+            };
+            
+            // حفظ في Firebase
+            if (isFirebaseInitialized) {
+                database.ref('groups/' + newGroup.id).set(newGroup)
+                    .then(() => {
+                        alert('تم إنشاء المجموعة بنجاح');
+                        createGroupPanel.style.display = 'none';
+                        groupNameInput.value = '';
+                        groupDescriptionInput.value = '';
+                    })
+                    .catch(error => {
+                        console.error('خطأ في إنشاء المجموعة:', error);
+                        alert('حدث خطأ في إنشاء المجموعة');
+                    });
+            } else {
+                alert('لا يمكن إنشاء مجموعة بدون اتصال بـ Firebase');
+            }
+        }
+
+        // إنشاء منشور جديد
+        function createNewPost() {
+            const content = postContentInput.value.trim();
+            const mediaUrl = postMediaUrlInput.value.trim();
+            const mediaType = postMediaTypeInput.value;
+            
+            if (content === '') {
+                alert('الرجاء إدخال محتوى المنشور');
+                return;
+            }
+            
+            const newPost = {
+                id: 'post_' + Date.now(),
+                content: content,
+                author: currentUser.name,
+                time: new Date().toLocaleString('ar-EG'),
+                timestamp: Date.now(),
+                likes: 0,
+                comments: 0
+            };
+            
+            if (mediaUrl !== '' && mediaType !== 'none') {
+                newPost.mediaUrl = mediaUrl;
+                newPost.mediaType = mediaType;
+            }
+            
+            // حفظ في Firebase
+            if (isFirebaseInitialized) {
+                database.ref('posts/' + newPost.id).set(newPost)
+                    .then(() => {
+                        alert('تم نشر المنشور بنجاح');
+                        createPostPanel.style.display = 'none';
+                        postContentInput.value = '';
+                        postMediaUrlInput.value = '';
+                        postMediaTypeInput.value = 'none';
+                    })
+                    .catch(error => {
+                        console.error('خطأ في نشر المنشور:', error);
+                        alert('حدث خطأ في نشر المنشور');
+                    });
+            } else {
+                alert('لا يمكن نشر منشور بدون اتصال بـ Firebase');
+            }
+        }
+
+        // تسجيل الخروج
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                // إزالة المستخدم من المستخدمين المتصلين
+                if (isFirebaseInitialized && currentUser) {
+                    database.ref('onlineUsers/' + currentUser.name).remove();
+                }
+                
+                // مسح بيانات المستخدم
+                localStorage.removeItem('gosem_user');
+                currentUser = null;
+                
+                // العودة إلى صفحة تسجيل الدخول
+                showLoginPage();
+            }
+        }
+
+        // البحث في الرسائل
+        function searchMessages() {
+            const searchTerm = prompt('أدخل كلمة للبحث في الرسائل:');
+            if (searchTerm) {
+                const filteredMessages = messages.filter(msg => 
+                    msg.text.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                
+                if (filteredMessages.length > 0) {
+                    // عرض الرسائل التي تحتوي على مصطلح البحث
+                    const originalMessages = [...messages];
+                    messages = filteredMessages;
+                    renderMessages();
+                    
+                    // إعادة الرسائل الأصلية بعد 5 ثوان
+                    setTimeout(() => {
+                        messages = originalMessages;
+                        renderMessages();
+                    }, 5000);
+                } else {
+                    alert('لم يتم العثور على رسائل تحتوي على: ' + searchTerm);
+                }
+            }
+        }
+
+        // إضافة عضو للمجموعة
+        function addMemberToGroup() {
+            const memberName = prompt('أدخل اسم العضو لإضافته إلى المجموعة:');
+            if (memberName) {
+                alert(`تم إضافة ${memberName} إلى المجموعة بنجاح`);
+                // في تطبيق حقيقي، سيتم هنا إضافة العضو إلى مجموعة في قاعدة البيانات
+            }
+        }
+
+        // تهيئة الأحداث
+        function initEvents() {
+            // تسجيل الدخول
+            loginBtn.addEventListener('click', function() {
+                const username = usernameInput.value.trim();
+                if (username === '') {
+                    alert('الرجاء إدخال اسم المستخدم');
+                    return;
+                }
+                
+                currentUser = {
+                    name: username,
+                    loginTime: new Date()
+                };
+                
+                localStorage.setItem('gosem_user', JSON.stringify(currentUser));
+                showMainPage();
+            });
+            
+            // إرسال رسالة عند النقر على الزر
+            sendBtn.addEventListener('click', sendMessage);
+            
+            // إرسال رسالة عند الضغط على Enter
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // ضبط ارتفاع منطقة النص تلقائياً
+            messageInput.addEventListener('input', adjustTextareaHeight);
+            
+            // فتح لوحة المطور
+            contactPageBtn.addEventListener('click', showDeveloperPanel);
+            
+            // التحقق من كلمة سر المطور
+            devSubmitBtn.addEventListener('click', function() {
+                if (devPassword.value === '123') {
+                    devOptions.style.display = 'block';
+                } else {
+                    alert('كلمة السر غير صحيحة');
+                }
+            });
+            
+            // إغلاق لوحة المطور
+            devCloseBtn.addEventListener('click', closeDeveloperPanel);
+            
+            // حفظ تكوين Firebase
+            saveConfigBtn.addEventListener('click', function() {
+                const configText = firebaseConfigTextarea.value.trim();
+                if (configText === '') {
+                    alert('الرجاء إدخال تكوين Firebase');
+                    return;
+                }
+                
+                try {
+                    const config = JSON.parse(configText);
+                    localStorage.setItem('gosem_firebase_config', configText);
+                    alert('تم حفظ تكوين Firebase بنجاح');
+                } catch (e) {
+                    alert('تكوين Firebase غير صالح. الرجاء إدخال JSON صالح');
+                }
+            });
+            
+            // تنزيل التكوينات السابقة
+            downloadConfigBtn.addEventListener('click', function() {
+                const config = localStorage.getItem('gosem_firebase_config');
+                if (!config) {
+                    alert('لا توجد تكوينات سابقة');
+                    return;
+                }
+                
+                const blob = new Blob([config], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'gosem_firebase_config.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+            
+            // إعادة تعيين كل البيانات
+            resetConfigBtn.addEventListener('click', function() {
+                if (confirm('هل تريد حقاً إعادة تعيين كل البيانات؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            });
+            
+            // إظهار/إخفاء قائمة الإعدادات
+            settingsBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const rect = settingsBtn.getBoundingClientRect();
+                settingsMenu.style.display = 'block';
+                settingsMenu.style.top = `${rect.bottom + 5}px`;
+                settingsMenu.style.left = `${rect.left - 150}px`;
+            });
+            
+            // إظهار/إخفاء قائمة الدردشة
+            chatMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const rect = chatMenuBtn.getBoundingClientRect();
+                chatMenu.style.display = 'block';
+                chatMenu.style.top = `${rect.bottom + 5}px`;
+                chatMenu.style.left = `${rect.left - 150}px`;
+            });
+            
+            // إغلاق القوائم المنسدلة عند النقر خارجها
+            document.addEventListener('click', function() {
+                settingsMenu.style.display = 'none';
+                chatMenu.style.display = 'none';
+            });
+            
+            // منع إغلاق القوائم عند النقر داخلها
+            settingsMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            chatMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // تبديل المجموعات
+            groupItems.forEach(item => {
+                if (item.dataset.group) {
+                    item.addEventListener('click', function() {
+                        const groupId = this.dataset.group;
+                        const groupName = this.querySelector('h4').textContent;
+                        switchGroup(groupId, groupName);
+                    });
+                }
+            });
+            
+            // إنشاء مجموعة جديدة
+            createGroupBtn.addEventListener('click', function() {
+                createGroupPanel.style.display = 'flex';
+            });
+            
+            createGroupConfirmBtn.addEventListener('click', createNewGroup);
+            
+            createGroupCancelBtn.addEventListener('click', function() {
+                createGroupPanel.style.display = 'none';
+                groupNameInput.value = '';
+                groupDescriptionInput.value = '';
+            });
+            
+            // إنشاء منشور جديد
+            createPostBtn.addEventListener('click', function() {
+                createPostPanel.style.display = 'flex';
+            });
+            
+            createPostConfirmBtn.addEventListener('click', createNewPost);
+            
+            createPostCancelBtn.addEventListener('click', function() {
+                createPostPanel.style.display = 'none';
+                postContentInput.value = '';
+                postMediaUrlInput.value = '';
+                postMediaTypeInput.value = 'none';
+            });
+            
+            // تسجيل الخروج
+            logoutBtn.addEventListener('click', logout);
+            
+            // البحث في الرسائل
+            searchMessagesBtn.addEventListener('click', searchMessages);
+            
+            // إضافة عضو للمجموعة
+            addMemberBtn.addEventListener('click', addMemberToGroup);
+        }
+
+        // بدء التطبيق
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            initEvents();
+        });
+    </script>
+</body>
+  </html>
